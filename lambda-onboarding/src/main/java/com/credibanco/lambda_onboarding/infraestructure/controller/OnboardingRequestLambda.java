@@ -46,12 +46,13 @@ public class OnboardingRequestLambda implements RequestHandler<APIGatewayProxyRe
         try {
             OnboardingRequestRequest input = gson.fromJson(event.getBody(), OnboardingRequestRequest.class);
 
-            if (input == null || input.getRequestId() == null || input.getRequestName() == null || input.getTPP() == null) {
+            if (input == null || input.getRequestId() == null || input.getRequestName() == null || input.getTPP() == null
+            || input.getType() == null ) {
                 return returnApiResponse(HttpStatus.SC_BAD_REQUEST, REQUEST_BODY_BAD_REQUEST,
                         ERROR_MESSAGE_BAD_REQUEST, logger);
             }
 
-            if (input.getRequestId().isEmpty() || input.getRequestName().isEmpty()) {
+            if (input.getRequestId().isEmpty() || input.getRequestName().isEmpty() || input.getType().isEmpty()) {
                 return returnApiResponse(HttpStatus.SC_BAD_REQUEST, REQUEST_BODY_BAD_REQUEST,
                         ERROR_MESSAGE_BAD_REQUEST, logger);
             }
@@ -62,7 +63,6 @@ public class OnboardingRequestLambda implements RequestHandler<APIGatewayProxyRe
             Map<String, Object> additionalInfo = new HashMap<>();
             additionalInfo.put("clientBank", true);
 
-            // Construcción de 'responseBody'
             Map<String, Object> responseBody = new HashMap<>();
             responseBody.put("requestName", input.getRequestName());
             responseBody.put("createdAt", currentTimestamp);
@@ -70,7 +70,7 @@ public class OnboardingRequestLambda implements RequestHandler<APIGatewayProxyRe
             responseBody.put("TPP", input.getTPP());
             responseBody.put("requestId", input.getRequestId());
             responseBody.put("additionalInfo", additionalInfo);
-            responseBody.put("type", "vigilada");
+            responseBody.put("type", input.getType());
             responseBody.put("requestStatus", "Pending");
             responseBody.put("updatedAt", currentTimestamp);
 

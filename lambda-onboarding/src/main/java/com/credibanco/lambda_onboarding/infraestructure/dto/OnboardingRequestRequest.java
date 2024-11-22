@@ -7,4 +7,5 @@ public class OnboardingRequestRequest {
     private String requestId;
     private String requestName;
     private String TPP;
+    private String type;
 }

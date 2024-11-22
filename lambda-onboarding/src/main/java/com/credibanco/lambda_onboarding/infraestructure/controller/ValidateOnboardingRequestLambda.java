@@ -11,6 +11,8 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.credibanco.lambda_onboarding.infraestructure.config.ByteBufferAdapter;
 import com.credibanco.lambda_onboarding.infraestructure.dto.OnboardingRequest;
+import com.credibanco.lambda_onboarding.infraestructure.exception.Error;
+import com.credibanco.lambda_onboarding.infraestructure.exception.ResponseError;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.http.HttpStatus;
@@ -28,7 +30,6 @@ public class ValidateOnboardingRequestLambda implements RequestHandler<APIGatewa
     private final Gson gson;
     private final AmazonDynamoDB dynamoDBClient;
     private static final String TABLE_NAME = "onboarding_request";
-
     public ValidateOnboardingRequestLambda() {
         this.dynamoDBClient = AmazonDynamoDBClientBuilder.defaultClient();
         this.gson = new GsonBuilder()
@@ -36,18 +37,13 @@ public class ValidateOnboardingRequestLambda implements RequestHandler<APIGatewa
                 .registerTypeAdapter(java.nio.ByteBuffer.class, new ByteBufferAdapter())
                 .create();
     }
-
-
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent event, Context context) {
         final LambdaLogger logger = context.getLogger();
         logger.log(TITLE_REQUEST + event.getBody());
-
         APIGatewayProxyResponseEvent response = new APIGatewayProxyResponseEvent();
-
         try {
             OnboardingRequest input = gson.fromJson(event.getBody(), OnboardingRequest.class);
-
             if (input == null || input.getRequestEmail() == null || input.getRequestName() == null
                     || input.getType() == null || input.getRequestStatus() == null || input.getTPP() == null) {
                 return returnApiResponse(HttpStatus.SC_BAD_REQUEST, REQUEST_BODY_BAD_REQUEST,
@@ -116,12 +112,12 @@ public class ValidateOnboardingRequestLambda implements RequestHandler<APIGatewa
 
     private APIGatewayProxyResponseEvent returnApiResponse(int statusCode, String responseBody,
                                                            String errorMessage, LambdaLogger logger) {
-        final com.credibanco.lambda_onboarding.infraestructure.exception.Error error =
-                new com.credibanco.lambda_onboarding.infraestructure.exception.Error();
+        final Error error =
+                new Error();
         error.setErrorMessage(errorMessage);
 
-        com.credibanco.lambda_onboarding.infraestructure.exception.ResponseError<String> response =
-                new com.credibanco.lambda_onboarding.infraestructure.exception.ResponseError<>(statusCode, responseBody, error);
+        ResponseError<String> response =
+                new ResponseError<>(statusCode, responseBody, error);
 
         APIGatewayProxyResponseEvent responseEvent = new APIGatewayProxyResponseEvent()
                 .withStatusCode(statusCode)
